@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Swagger;
 using TobinTaxer.Authorization;
 using TobinTaxer.DB;
+using TobinTaxer.OptionModels;
 
 namespace TobinTaxer
 {
@@ -32,6 +33,8 @@ namespace TobinTaxer
             });
 
             SetupDatabase(services);
+            services.Configure<Services>(Configuration.GetSection(nameof(Services)));
+            services.Configure<TaxInfo>(Configuration.GetSection(nameof(TaxInfo)));
 
             //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             //    .AddJwtBearer(options =>
@@ -65,7 +68,7 @@ namespace TobinTaxer
                 app.UseHsts();
             }
 
-            InitializeDatabase(app);
+            InitializeDatabase(app, env);
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
@@ -79,18 +82,21 @@ namespace TobinTaxer
             app.UseMvc();
         }
 
-        private static void InitializeDatabase(IApplicationBuilder app)
+        private static void InitializeDatabase(IApplicationBuilder app, IHostingEnvironment env)
         {
             using (var scope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
             {
-                scope.ServiceProvider.GetRequiredService<PublicShareOwnerContext>().Database.Migrate();
-                //scope.ServiceProvider.GetRequiredService<PublicShareOwnerContext>().Database.EnsureCreated();
+                if(env.IsDevelopment())
+                    scope.ServiceProvider.GetRequiredService<TobinTaxerContext>().Database.EnsureCreated();
+                else
+                    scope.ServiceProvider.GetRequiredService<TobinTaxerContext>().Database.Migrate();
+
             }
         }
         private void SetupDatabase(IServiceCollection services)
         {
-            services.AddDbContext<PublicShareOwnerContext>
-                (options => options.UseSqlServer(Configuration.GetConnectionString("PublicShareOwnerDatabase")));
+            services.AddDbContext<TobinTaxerContext>
+                (options => options.UseSqlServer(Configuration.GetConnectionString("TobinTaxerDatabase")));
         }
     }
 }
