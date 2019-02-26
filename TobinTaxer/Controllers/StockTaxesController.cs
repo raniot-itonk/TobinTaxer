@@ -40,16 +40,25 @@ namespace TobinTaxer.Controllers
             var url = _services.BankService.Url + "api/transfer";
             var stateAccount = Guid.Parse("7bedb953-4e7e-45f9-91de-ffc0175be744");
             var transferObject = new TransferObject { Amount = tax, FromAccountId = stockTaxObject.Buyer, ReservationId = stockTaxObject.ReservationId, ToAccountId = stateAccount };
-            var response = await Policy.Handle<FlurlHttpException>()
-                .OrResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                .WaitAndRetryAsync(new[]
-                {
-                    TimeSpan.FromSeconds(1),
-                    TimeSpan.FromSeconds(2),
-                    TimeSpan.FromSeconds(3)
-                }).ExecuteAsync(() => url.WithTimeout(10).PutJsonAsync(transferObject));
+            try
+            {
+                var response = await Policy.Handle<FlurlHttpException>()
+                    .OrResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+                    .WaitAndRetryAsync(new[]
+                    {
+                        TimeSpan.FromSeconds(1),
+                        TimeSpan.FromSeconds(2),
+                        TimeSpan.FromSeconds(3)
+                    }).ExecuteAsync(() => url.WithTimeout(10).PutJsonAsync(transferObject));
 
-            if (!response.IsSuccessStatusCode) return BadRequest("Failed to Tax trade");
+                if (!response.IsSuccessStatusCode) return BadRequest("Failed to Tax trade");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            
 
             // Store in own database
             var taxHistory = new TaxHistory

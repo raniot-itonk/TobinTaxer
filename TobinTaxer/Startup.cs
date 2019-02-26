@@ -14,9 +14,11 @@ namespace TobinTaxer
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private IHostingEnvironment _env;
+        public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
             Configuration = configuration;
+            _env = env;
         }
 
         public IConfiguration Configuration { get; }
@@ -32,7 +34,7 @@ namespace TobinTaxer
                 c.SwaggerDoc("v1", new Info { Title = "My API", Version = "v1" });
             });
 
-            SetupDatabase(services);
+            SetupDatabase(services, _env);
             services.Configure<Services>(Configuration.GetSection(nameof(Services)));
             services.Configure<TaxInfo>(Configuration.GetSection(nameof(TaxInfo)));
 
@@ -93,10 +95,20 @@ namespace TobinTaxer
 
             }
         }
-        private void SetupDatabase(IServiceCollection services)
+        private void SetupDatabase(IServiceCollection services, IHostingEnvironment env)
         {
-            services.AddDbContext<TobinTaxerContext>
-                (options => options.UseSqlServer(Configuration.GetConnectionString("TobinTaxerDatabase")));
+            if(env.IsDevelopment())
+            {
+                services.AddDbContext<TobinTaxerContext>(options => options.UseInMemoryDatabase("InMemoryDbForTesting"));
+            }
+            else
+            {
+                services.AddDbContext<TobinTaxerContext>
+                    (options => options.UseSqlServer(Configuration.GetConnectionString("TobinTaxerDatabase")));
+            }
+            
+
+
         }
     }
 }
