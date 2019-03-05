@@ -7,6 +7,6 @@
 
     public class Service
     {
-        public string Url { get; set; }
+        public string BaseAddress { get; set; }
     }
 }

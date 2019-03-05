@@ -37,7 +37,7 @@ namespace TobinTaxer.Controllers
             // Call Bank service
             var tax = stockTaxObject.Price * stockTaxObject.Amount * _taxInfo.TaxRate;
 
-            var url = _services.BankService.Url + "api/transfer";
+            var url = _services.BankService.BaseAddress + "api/transfer";
             var stateAccount = Guid.Parse("7bedb953-4e7e-45f9-91de-ffc0175be744");
             var transferObject = new TransferObject { Amount = tax, FromAccountId = stockTaxObject.Buyer, ReservationId = stockTaxObject.ReservationId, ToAccountId = stateAccount };
             try
