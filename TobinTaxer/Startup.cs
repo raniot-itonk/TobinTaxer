@@ -14,7 +14,7 @@ namespace TobinTaxer
 {
     public class Startup
     {
-        private IHostingEnvironment _env;
+        private readonly IHostingEnvironment _env;
         public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
             Configuration = configuration;
@@ -106,9 +106,6 @@ namespace TobinTaxer
                 services.AddDbContext<TobinTaxerContext>
                     (options => options.UseSqlServer(Configuration.GetConnectionString("TobinTaxerDatabase")));
             }
-            
-
-
         }
     }
 }
