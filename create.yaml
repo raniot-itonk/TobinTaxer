@@ -1,18 +1,18 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: publicshareownercontrol
+  name: tobintaxer
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: publicshareownercontrol
+        app: tobintaxer
     spec:
       terminationGracePeriodSeconds: 10
       containers:
-      - name: publicshareownercontrol
-        image: raniotitonk/publicshareownercontrol
+      - name: tobintaxer
+        image: raniotitonk/tobintaxer
         ports:
         - containerPort: 80
         env:
@@ -22,10 +22,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: publicshareownercontrol
+  name: tobintaxer
 spec:
   selector:
-    app: publicshareownercontrol
+    app: tobintaxer
   ports:
     - protocol: TCP
       port: 80
