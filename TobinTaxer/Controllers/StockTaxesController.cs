@@ -53,8 +53,9 @@ namespace TobinTaxer.Controllers
 
                 if (!response.IsSuccessStatusCode) return BadRequest("Failed to Tax trade");
             }
-            catch (Exception e)
+            catch (FlurlHttpException e)
             {
+                Console.WriteLine(e.Call.Response);
                 Console.WriteLine(e);
                 throw;
             }
@@ -67,7 +68,7 @@ namespace TobinTaxer.Controllers
                 Buyer = stockTaxObject.Buyer,
                 Price = stockTaxObject.Price,
                 Seller = stockTaxObject.Seller,
-                StockName = stockTaxObject.StockName,
+                StockId = stockTaxObject.StockId,
                 TaxRate = _taxInfo.TaxRate,
                 Tax = tax 
             };

@@ -17,7 +17,7 @@ namespace TobinTaxer.DB
         public long Id { get; set; }
         public Guid Buyer { get; set; }
         public Guid Seller { get; set; }
-        public string StockName { get; set; }
+        public long StockId { get; set; }
         public double Price { get; set; }
         public int Amount { get; set; }
         public double TaxRate { get; set; }

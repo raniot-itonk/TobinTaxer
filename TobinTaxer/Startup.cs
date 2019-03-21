@@ -99,7 +99,9 @@ namespace TobinTaxer
         {
             if(env.IsDevelopment())
             {
-                services.AddDbContext<TobinTaxerContext>(options => options.UseInMemoryDatabase("InMemoryDbForTesting"));
+                //services.AddDbContext<TobinTaxerContext>(options => options.UseInMemoryDatabase("InMemoryDbForTesting"));
+                services.AddDbContext<TobinTaxerContext>
+                    (options => options.UseSqlServer(Configuration.GetConnectionString("TobinTaxerDatabase")));
             }
             else
             {
