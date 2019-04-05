@@ -32,7 +32,7 @@ namespace TobinTaxer.Controllers
         // Post Stock Tax
         //[Authorize("BankingService.UserActions")]
         [HttpPost]
-        public async Task<ActionResult<TaxHistory>> PostStockTax(StockTaxObject stockTaxObject)
+        public async Task<ActionResult<ValidationResult>> PostStockTax(StockTaxObject stockTaxObject)
         {
             try
             {
@@ -42,26 +42,15 @@ namespace TobinTaxer.Controllers
                 var url = _services.BankService.BaseAddress + "api/transfer";
                 var stateAccount = Guid.Parse("7bedb953-4e7e-45f9-91de-ffc0175be744");
                 var transferObject = new TransferObject { Amount = tax, FromAccountId = stockTaxObject.Buyer, ReservationId = stockTaxObject.ReservationId, ToAccountId = stateAccount };
-                try
-                {
-                    var response = await Policy.Handle<FlurlHttpException>()
-                        .OrResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                        .WaitAndRetryAsync(new[]
-                        {
-                        TimeSpan.FromSeconds(1),
-                        TimeSpan.FromSeconds(2),
-                        TimeSpan.FromSeconds(3)
-                        }).ExecuteAsync(() => url.WithTimeout(10).PutJsonAsync(transferObject));
 
-                    if (!response.IsSuccessStatusCode) return BadRequest("Failed to Tax trade");
-                }
-                catch (FlurlHttpException e)
-                {
-                    Console.WriteLine(e.Call.Response);
-                    Console.WriteLine(e);
-                    throw;
-                }
-
+                var validationResult = await Policy.Handle<FlurlHttpException>()
+                    .WaitAndRetryAsync(new[]
+                    {
+                    TimeSpan.FromSeconds(1),
+                    TimeSpan.FromSeconds(2),
+                    TimeSpan.FromSeconds(3)
+                    }).ExecuteAsync(() => url.WithTimeout(10).PutJsonAsync(transferObject).ReceiveJson<ValidationResult>());
+                if(!validationResult.Valid) _logger.LogWarning("Failed to Tax Trade, with error {ErrorMessage}", validationResult.ErrorMessage);
 
                 // Store in own database
                 var taxHistory = new TaxHistory
@@ -79,7 +68,7 @@ namespace TobinTaxer.Controllers
 
                 _logger.LogInformation("Exacted {Tax in taxes from from {User}", tax, stockTaxObject.Buyer);
                 _logger.LogInformation("Logged TaxInfo to database {TaxHistory}", taxHistory);
-                return taxHistory;
+                return validationResult;
             }
             catch (Exception e)
             {
