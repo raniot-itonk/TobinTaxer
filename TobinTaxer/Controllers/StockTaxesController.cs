@@ -66,7 +66,7 @@ namespace TobinTaxer.Controllers
                 await _context.TaxHistories.AddAsync(taxHistory);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Exacted {Tax in taxes from from {User}", tax, stockTaxObject.Buyer);
+                _logger.LogInformation("Exacted {Tax} in taxes from from {User}", tax, stockTaxObject.Buyer);
                 _logger.LogInformation("Logged TaxInfo to database {TaxHistory}", taxHistory);
                 return validationResult;
             }
