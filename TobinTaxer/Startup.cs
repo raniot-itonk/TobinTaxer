@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,7 @@ namespace TobinTaxer
             });
 
             SetupDatabase(services, _env);
+
             services.Configure<Services>(Configuration.GetSection(nameof(Services)));
             services.Configure<TaxInfo>(Configuration.GetSection(nameof(TaxInfo)));
 
@@ -54,6 +56,8 @@ namespace TobinTaxer
             //});
 
             services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
+
+            services.AddHealthChecks().AddDbContextCheck<TobinTaxerContext>(tags: new[] { "ready" });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -72,6 +76,9 @@ namespace TobinTaxer
                 app.UseHsts();
                 context.Database.Migrate();
             }
+
+            SetupReadyAndLiveHealthChecks(app);
+
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
@@ -98,6 +105,20 @@ namespace TobinTaxer
                 services.AddDbContext<TobinTaxerContext>
                     (options => options.UseSqlServer(Configuration.GetConnectionString("TobinTaxerDatabase")));
             }
+        }
+
+        private static void SetupReadyAndLiveHealthChecks(IApplicationBuilder app)
+        {
+            // The readiness check uses all registered checks with the 'ready' tag.
+            app.UseHealthChecks("/health/ready", new HealthCheckOptions()
+            {
+                Predicate = (check) => check.Tags.Contains("ready"),
+            });
+            app.UseHealthChecks("/health/live", new HealthCheckOptions()
+            {
+                // Exclude all checks and return a 200-Ok.
+                Predicate = (_) => false
+            });
         }
     }
 }
