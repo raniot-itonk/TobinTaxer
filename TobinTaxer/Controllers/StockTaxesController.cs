@@ -7,6 +7,7 @@ using TobinTaxer.DB;
 using Flurl.Http;
 using Microsoft.Extensions.Options;
 using Polly;
+using Prometheus;
 using TobinTaxer.Models;
 using TobinTaxer.OptionModels;
 
@@ -20,6 +21,10 @@ namespace TobinTaxer.Controllers
         private readonly ILogger<StockTaxesController> _logger;
         private readonly Services _services;
         private readonly TaxInfo _taxInfo;
+
+        private static readonly Counter TaxPaid = Metrics
+            .CreateCounter("TaxPaid", "Total amount of tax paid");
+
 
         public StockTaxesController(TobinTaxerContext context, ILogger<StockTaxesController> logger, IOptionsMonitor<Services> servicesOptions, IOptionsMonitor<TaxInfo> taxOptions)
         {
@@ -63,6 +68,7 @@ namespace TobinTaxer.Controllers
                     TaxRate = _taxInfo.TaxRate,
                     Tax = tax
                 };
+                TaxPaid.Inc(tax);
                 await _context.TaxHistories.AddAsync(taxHistory);
                 await _context.SaveChangesAsync();
 

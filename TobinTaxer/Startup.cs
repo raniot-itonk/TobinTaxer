@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Prometheus;
 using Swashbuckle.AspNetCore.Swagger;
 using TobinTaxer.Authorization;
 using TobinTaxer.DB;
@@ -79,6 +80,7 @@ namespace TobinTaxer
 
             SetupReadyAndLiveHealthChecks(app);
 
+            app.UseMetricServer();
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
