@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Prometheus;
 using Swashbuckle.AspNetCore.Swagger;
 using TobinTaxer.Authorization;
+using TobinTaxer.Clients;
 using TobinTaxer.DB;
 using TobinTaxer.OptionModels;
 
@@ -40,6 +41,7 @@ namespace TobinTaxer
 
             services.Configure<Services>(Configuration.GetSection(nameof(Services)));
             services.Configure<TaxInfo>(Configuration.GetSection(nameof(TaxInfo)));
+            services.Configure<RabbitMqOptions>(Configuration.GetSection(nameof(RabbitMqOptions)));
 
             //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             //    .AddJwtBearer(options =>
@@ -57,6 +59,7 @@ namespace TobinTaxer
             //});
 
             services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
+            services.AddSingleton<IRabbitMqClient, RabbitMqClient>();
 
             services.AddHealthChecks().AddDbContextCheck<TobinTaxerContext>(tags: new[] { "ready" });
         }

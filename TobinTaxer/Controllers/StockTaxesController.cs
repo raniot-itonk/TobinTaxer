@@ -8,6 +8,7 @@ using Flurl.Http;
 using Microsoft.Extensions.Options;
 using Polly;
 using Prometheus;
+using TobinTaxer.Clients;
 using TobinTaxer.Models;
 using TobinTaxer.OptionModels;
 
@@ -19,6 +20,7 @@ namespace TobinTaxer.Controllers
     {
         private readonly TobinTaxerContext _context;
         private readonly ILogger<StockTaxesController> _logger;
+        private readonly IRabbitMqClient _rabbitMqClient;
         private readonly Services _services;
         private readonly TaxInfo _taxInfo;
 
@@ -26,10 +28,11 @@ namespace TobinTaxer.Controllers
             .CreateCounter("TaxPaid", "Total amount of tax paid");
 
 
-        public StockTaxesController(TobinTaxerContext context, ILogger<StockTaxesController> logger, IOptionsMonitor<Services> servicesOptions, IOptionsMonitor<TaxInfo> taxOptions)
+        public StockTaxesController(TobinTaxerContext context, ILogger<StockTaxesController> logger, IOptionsMonitor<Services> servicesOptions, IOptionsMonitor<TaxInfo> taxOptions, IRabbitMqClient rabbitMqClient)
         {
             _context = context;
             _logger = logger;
+            _rabbitMqClient = rabbitMqClient;
             _services = servicesOptions.CurrentValue;
             _taxInfo = taxOptions.CurrentValue;
         }
@@ -72,12 +75,15 @@ namespace TobinTaxer.Controllers
                 await _context.TaxHistories.AddAsync(taxHistory);
                 await _context.SaveChangesAsync();
 
+                _rabbitMqClient.SendMessage(new HistoryMessage { Event = "PaidTax", EventMessage = $"Paid ${tax} tax for buying shares", User = stockTaxObject.Buyer, Timestamp = DateTime.UtcNow });
+
                 _logger.LogInformation("Exacted {Tax} in taxes from from {User}", tax, stockTaxObject.Buyer);
                 _logger.LogInformation("Logged TaxInfo to database {TaxHistory}", taxHistory);
                 return validationResult;
             }
             catch (Exception e)
             {
+                _logger.LogError(e, "Failed to do stuff");
                 Console.WriteLine(e);
                 throw;
             }
