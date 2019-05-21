@@ -55,7 +55,7 @@ namespace TobinTaxer.Clients
                 VirtualHost = _rabbitMqOptions.VirtualHost
             };
             var connection = factory.CreateConnection();
-            var channel = _connection.CreateModel();
+            var channel = connection.CreateModel();
             return (channel, connection);
         }
 
